@@ -19,7 +19,7 @@ def grade_digitalize(ws_value):
             each[4] = 4
         elif each[4] == '硕士':
             each[4] = 5
-        # 期望对方年级数字化
+        # 期望对方年级数字化且范围化  可以增设一列
         if each[5] == '大一':
             each[5] = 1
         elif each[5] == '大二':
@@ -73,36 +73,36 @@ def gender_orientation_initialize(ws_value):
 
 
 # 匹配程度打分
-def match_degree(person1, person2):
+#并根据条件个数n变化
+def match_degree(person1, person2,n):
     result = 0
+    i=1;
     # 按照年级、条件进行双向打分
     if (person1[5] >= (person2[4] - 1)) and (person1[5] <= (person2[4] + 1)):
         result += 1
         if person1[5] == person2[4]:
             result += 0.5
-    if person1[7] == person2[6]:
-        result += 1
-    if person1[9] == person2[8]:
-        result += 1
-    if person1[11] == person2[10]:
-        result += 1
+    while(i<=n):
+        if person1[5+i] == person2[6+i]:
+            result += 1
+        ++i
+    i=1
     if (person2[5] >= (person1[4] - 1)) and (person2[5] <= (person1[4] + 1)):
         result += 1
         if person2[5] == person1[4]:
             result += 0.5
-    if person2[7] == person1[6]:
-        result += 1
-    if person2[9] == person1[8]:
-        result += 1
-    if person2[11] == person1[10]:
-        result += 1
+    while(i<=n):
+        if person1[5+i] == person2[6+i]:
+            result += 1
+        ++i
     return result
 
 
 # 异性恋条件匹配
-def condition_match(group1, group2, num, group_num, final_sheet):
+def condition_match(group1, group2, num, group_num, final_sheet,n):
     remain_group1 = list()
     to_match = dict()
+    
     for person in group1:  # 正向筛选，选择对person1来说高分的person2
         current_degree = 0  # 匹配程度初始化
         current_person = []  # 匹配对象初始化
@@ -110,14 +110,14 @@ def condition_match(group1, group2, num, group_num, final_sheet):
             break
         for person2 in group2:
             former_degree = current_degree
-            current_degree = max(former_degree, match_degree(person, person2))  # 取高分对象
-            if current_degree == 9:  # 得到9分直接匹配
+            current_degree = max(former_degree, match_degree(person, person2,n))  # 取高分对象
+            if current_degree == 2n+3 :  # 得到满分直接匹配
                 current_person = person2
                 break
             if current_degree > former_degree:
                 current_person = person2  # 取高分对象
-        if current_degree > 5:
-            # 此处取5的原因：
+        if current_degree > 2n-1 :
+            # 此处取2n-1的原因：
             # ① 重视年级所占分数。
             # ② 如果两个人的年级没有任何一方是匹配的，除非其他所有条件全部互选，否则不可能在这里被选择。
             final_sheet.cell(num, 1, person[0])
@@ -134,7 +134,7 @@ def condition_match(group1, group2, num, group_num, final_sheet):
             group2.remove(current_person)
         else:
             remain_group1.append(person)
-            if to_match.get(current_person[0]):  # 反向筛选，存入对person2来说最高分的person1
+            if to_match.get(current_person[0]):  # 反向筛选，存入对person2来说最高分的person1    
                 if to_match[current_person[0]][1] < current_degree:
                     to_match[current_person[0]] = [person, current_degree]
             else:
@@ -200,7 +200,7 @@ def lgbt_match(group1, group2, num, group_num, final_sheet, no_match):
         t_tp = []
         for person in group2:
             former_degree = current_degree
-            current_degree = max(current_degree, match_degree(t_p, person))
+            current_degree = max(current_degree, match_degree(t_p, person,n))
             if current_degree > former_degree:
                 t_tp = person
         if current_degree > 5:
@@ -263,6 +263,8 @@ if __name__ == '__main__':
     ws_value = grade_digitalize(ws_value)
     boy_straight, boy_gay, girl_straight, girl_gay = gender_orientation_initialize(ws_value)
     # print([boy_straight, boy_gay, girl_straight, girl_gay])
+    #对于match_degree()的条件个数由n做决定   
+    const n=int (input( "请输入除性别年级外要匹配的条件个数:"))
     final_sheet = wb.create_sheet('Sheet2', 1)
     num = 1
     group_num = 1
