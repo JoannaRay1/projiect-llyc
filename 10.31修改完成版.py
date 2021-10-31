@@ -1,4 +1,4 @@
-# 2021.10.30
+# 2021.10.31
 # 发现此系统存在的纰漏：
 
 import openpyxl
@@ -15,7 +15,6 @@ def grade_digitalize(ws_value):
         tmp.append([grade[i] if i in grade else i for i in each])
     ws_value=tmp          
     return ws_value
-
 
 # 按照性取向分组
 # 男异性恋
@@ -58,7 +57,8 @@ def gender_orientation_initialize(ws_value):
 #修改处2：增加grade_match函数
 #判断年级是否完全匹配成功
 def grade_match(person1,person2):
-    if (person1[6] >= person2[4]) and (person1[5] <= person2[4] ):
+    print(type(person1[4]),"  ",type(person1[5]),"  ",type(person1[6]))
+    if person1[6] >= person2[4] and person1[5] <= person2[4] :
         if (person2[6] >= person1[4] ) and (person2[5] <= person1[4] ):
             return True
     return False        
@@ -158,29 +158,29 @@ def random_match(group1, group2, num, group_num, final_sheet, no_match):
     length = min(len(group1), len(group2))
     i,j=0
     while length > 0:
-        if(grade_match(group1[i], group2[j])):            
-            final_sheet.cell(num, 1, group1[i][0])
-            final_sheet.cell(num, 2, group1[i][1])
-            final_sheet.cell(num, 3, group_num)
-            final_sheet.cell(num, 4, group2[i][1])
-            num += 1
-            final_sheet.cell(num, 1, group2[j][0])
-            final_sheet.cell(num, 2, group2[j][1])
-            final_sheet.cell(num, 3, group_num)
-            final_sheet.cell(num, 4, group1[j][1])
-            num += 1
-            group_num += 1
-            length -= 1
-            group1.pop(i)
-            group2.pop(j)
-            #这里不对j进行操作，因为pop(j)后，位数向前挪动了一位
-            --i
-        else:            
-            if(j<group2.length):
-               ++j
-            else:
-                if(i<group1.length):
-                    ++i
+        while i<group1.length:
+            if grade_match(group1[i], group2[j]):            
+                final_sheet.cell(num, 1, group1[i][0])
+                final_sheet.cell(num, 2, group1[i][1])
+                final_sheet.cell(num, 3, group_num)
+                final_sheet.cell(num, 4, group2[i][1])
+                num += 1
+                final_sheet.cell(num, 1, group2[j][0])
+                final_sheet.cell(num, 2, group2[j][1])
+                final_sheet.cell(num, 3, group_num)
+                final_sheet.cell(num, 4, group1[j][1])
+                num += 1
+                group_num += 1
+                length -= 1
+                group1.pop(i)
+                group2.pop(j)
+                #这里不对j进行操作，因为pop(j)后，位数向前挪动了一位
+                i=i-1
+            else:            
+                if j<group2.length:
+                   j=j+1
+                else:
+                    i=i+1
                     j=0                    
     while len(group1) > 0:
         t_p = group1.pop(0)
@@ -251,7 +251,7 @@ def finish(group, num, final_sheet):
 
 
 if __name__ == '__main__':
-    # path = input('请输入需要进行匹配的文件地址：(注意后缀名)')
+     #path = input('请输入需要进行匹配的文件地址：(注意后缀名)')
     path = '恋爱觉醒.xlsx'
     wb = openpyxl.load_workbook(path)
     ws = wb.worksheets[0]
