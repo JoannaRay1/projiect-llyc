@@ -4,50 +4,46 @@
 
 import openpyxl
 
-
 # 将数据中的年级转化为数字，方便评分时进行比较
+#修改处1：更换了年级数字化的方式
 def grade_digitalize(ws_value):
+    for each in ws_value:
+         tmp=list()
     for each in ws_value:
         # 本人年级数字化
         # 期望对方年级数字化且范围化  假设each[6]为最高年级，each[5]为最低年级        
         grade={'大一':1,'大二':2,'大三':3,'大四':4,'硕士':5}
-        ws_value=list([grade[i] if i in grade else i for i in each]) 
-        print(ws_value)        
+        tmp.append([grade[i] if i in grade else i for i in each])
+    ws_value=tmp          
     return ws_value
 
 
 # 按照性取向分组
 # 男异性恋
-def boy_heterosexual(ws_value):
-    for line in ws_value:
-        print(type(line))
-        if line[2] != line[3] and line[2] == '男生':
-            return True
+def boy_heterosexual(line):
+    if line[2] != line[3] and line[2] == '男生':
+        return True
     return False
- 
-#list3 = list1.extend(list2)
+
 
 # 男同性恋
-def boy_homosexual(ws_value):    
-    for line in ws_value:   
-        if line[2] == line[3] and line[2] == '男生':
-            return True
+def boy_homosexual(line):
+    if line[2] == line[3] and line[2] == '男生':
+        return True
     return False
 
 
 # 女异性恋
-def girl_heterosexual(ws_value):
-    for line in ws_value:    
-        if line[2] != line[3] and line[2] == '女生':
-            return True
+def girl_heterosexual(line):
+    if line[2] != line[3] and line[2] == '女生':
+        return True
     return False
 
 
 # 女同性恋
-def girl_homosexual(ws_value):
-    for line in ws_value: 
-        if line[2] == line[3] and line[2] == '女生':
-            return True
+def girl_homosexual(line):
+    if line[2] == line[3] and line[2] == '女生':
+        return True
     return False
 
 
@@ -60,34 +56,39 @@ def gender_orientation_initialize(ws_value):
     girl_gay = list(filter(girl_homosexual, ws_value))
     return boy_straight, boy_gay, girl_straight, girl_gay
 
-
+#修改处2：增加grade_match函数
+#判断年级是否完全匹配成功
+def grade_match(person1,person2):
+    if (person1[6] >= person2[4]) and (person1[5] <= person2[4] ):
+        if (person2[6] >= person1[4] ) and person2[5] <= (person1[4] ):
+            return True
+    return False        
+        
+        
 # 匹配程度打分
-#并根据条件个数n变化
 def match_degree(person1, person2,n):
     result = 0
     i=1;
-    # 按照年级、条件进行双向打分
-    if (person1[5] >= (person2[4] - 1)) and (person1[5] <= (person2[4] + 1)):
-        result += 1
-        if person1[5] == person2[4]:
-            result += 0.5
+#修改处3：若年级不匹配得分直接为0
+    if not(grade_match(person1, person2)):
+        return 0    
+    # 按照条件进行双向打分
+      
     while(i<=n):
-        if person1[6+i] == person2[7+i]:
+        if person1[5+i] == person2[6+i]:
             result += 1
-        ++i
+        ++i    
     i=1
-    if (person2[5] >= (person1[4] - 1)) and (person2[5] <= (person1[4] + 1)):
-        result += 1
-        if person2[5] == person1[4]:
-            result += 0.5
     while(i<=n):
-        if person1[6+i] == person2[7+i]:
+        if person1[5+i] == person2[6+i]:
             result += 1
         ++i
     return result
 
 
 # 异性恋条件匹配
+#修改处4：引入匹配条件个数n为新参数
+#修改处5：current_degree的两个临界值取与n有关参数
 def condition_match(group1, group2, num, group_num, final_sheet,n):
     remain_group1 = list()
     to_match = dict()
@@ -100,7 +101,7 @@ def condition_match(group1, group2, num, group_num, final_sheet,n):
         for person2 in group2:
             former_degree = current_degree
             current_degree = max(former_degree, match_degree(person, person2,n))  # 取高分对象
-            if current_degree == 2*n+3 :  # 得到满分直接匹配
+            if current_degree == 2*n+2 :  # 得到满分直接匹配
                 current_person = person2
                 break
             if current_degree > former_degree:
@@ -152,6 +153,7 @@ def condition_match(group1, group2, num, group_num, final_sheet,n):
     return num, group_num, remain_group1, group2
 
 
+    
 # 异性恋匹配分数不足的进行随机匹配
 def random_match(group1, group2, num, group_num, final_sheet, no_match):
     length = min(len(group1), len(group2))
@@ -253,7 +255,7 @@ if __name__ == '__main__':
     boy_straight, boy_gay, girl_straight, girl_gay = gender_orientation_initialize(ws_value)
     # print([boy_straight, boy_gay, girl_straight, girl_gay])
     #对于match_degree()的条件个数由n做决定   
-    n = int(input( "请输入除性别年级外要匹配的条件个数:"))
+    n=int (input( "请输入除性别年级外要匹配的条件个数:"))
     final_sheet = wb.create_sheet('Sheet2', 1)
     num = 1
     group_num = 1
