@@ -59,7 +59,7 @@ def gender_orientation_initialize(ws_value):
 #判断年级是否完全匹配成功
 def grade_match(person1,person2):
     if (person1[6] >= person2[4]) and (person1[5] <= person2[4] ):
-        if (person2[6] >= person1[4] ) and person2[5] <= (person1[4] ):
+        if (person2[6] >= person1[4] ) and (person2[5] <= person1[4] ):
             return True
     return False        
         
