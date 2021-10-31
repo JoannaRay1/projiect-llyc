@@ -9,56 +9,45 @@ import openpyxl
 def grade_digitalize(ws_value):
     for each in ws_value:
         # 本人年级数字化
-        if each[4] == '大一':
-            each[4] = 1
-        elif each[4] == '大二':
-            each[4] = 2
-        elif each[4] == '大三':
-            each[4] = 3
-        elif each[4] == '大四':
-            each[4] = 4
-        elif each[4] == '硕士':
-            each[4] = 5
-        # 期望对方年级数字化且范围化  可以增设一列
-        if each[5] == '大一':
-            each[5] = 1
-        elif each[5] == '大二':
-            each[5] = 2
-        elif each[5] == '大三':
-            each[5] = 3
-        elif each[5] == '大四':
-            each[5] = 4
-        elif each[5] == '硕士':
-            each[5] = 5
+        # 期望对方年级数字化且范围化  假设each[6]为最高年级，each[5]为最低年级        
+        grade={'大一':1,'大二':2,'大三':3,'大四':4,'硕士':5}
+        ws_value=list([grade[i] if i in grade else i for i in each]) 
+        print(ws_value)        
     return ws_value
 
 
 # 按照性取向分组
 # 男异性恋
-def boy_heterosexual(line):
-    if line[2] != line[3] and line[2] == '男生':
-        return True
+def boy_heterosexual(ws_value):
+    for line in ws_value:
+        print(type(line))
+        if line[2] != line[3] and line[2] == '男生':
+            return True
     return False
-
+ 
+#list3 = list1.extend(list2)
 
 # 男同性恋
-def boy_homosexual(line):
-    if line[2] == line[3] and line[2] == '男生':
-        return True
+def boy_homosexual(ws_value):    
+    for line in ws_value:   
+        if line[2] == line[3] and line[2] == '男生':
+            return True
     return False
 
 
 # 女异性恋
-def girl_heterosexual(line):
-    if line[2] != line[3] and line[2] == '女生':
-        return True
+def girl_heterosexual(ws_value):
+    for line in ws_value:    
+        if line[2] != line[3] and line[2] == '女生':
+            return True
     return False
 
 
 # 女同性恋
-def girl_homosexual(line):
-    if line[2] == line[3] and line[2] == '女生':
-        return True
+def girl_homosexual(ws_value):
+    for line in ws_value: 
+        if line[2] == line[3] and line[2] == '女生':
+            return True
     return False
 
 
@@ -83,7 +72,7 @@ def match_degree(person1, person2,n):
         if person1[5] == person2[4]:
             result += 0.5
     while(i<=n):
-        if person1[5+i] == person2[6+i]:
+        if person1[6+i] == person2[7+i]:
             result += 1
         ++i
     i=1
@@ -92,7 +81,7 @@ def match_degree(person1, person2,n):
         if person2[5] == person1[4]:
             result += 0.5
     while(i<=n):
-        if person1[5+i] == person2[6+i]:
+        if person1[6+i] == person2[7+i]:
             result += 1
         ++i
     return result
@@ -111,12 +100,12 @@ def condition_match(group1, group2, num, group_num, final_sheet,n):
         for person2 in group2:
             former_degree = current_degree
             current_degree = max(former_degree, match_degree(person, person2,n))  # 取高分对象
-            if current_degree == 2n+3 :  # 得到满分直接匹配
+            if current_degree == 2*n+3 :  # 得到满分直接匹配
                 current_person = person2
                 break
             if current_degree > former_degree:
                 current_person = person2  # 取高分对象
-        if current_degree > 2n-1 :
+        if current_degree > 2*n-1 :
             # 此处取2n-1的原因：
             # ① 重视年级所占分数。
             # ② 如果两个人的年级没有任何一方是匹配的，除非其他所有条件全部互选，否则不可能在这里被选择。
@@ -264,12 +253,12 @@ if __name__ == '__main__':
     boy_straight, boy_gay, girl_straight, girl_gay = gender_orientation_initialize(ws_value)
     # print([boy_straight, boy_gay, girl_straight, girl_gay])
     #对于match_degree()的条件个数由n做决定   
-    const n=int (input( "请输入除性别年级外要匹配的条件个数:"))
+    n = int(input( "请输入除性别年级外要匹配的条件个数:"))
     final_sheet = wb.create_sheet('Sheet2', 1)
     num = 1
     group_num = 1
     no_match = list()
-    row_num, existing_group, remain_girlS, remain_boyS = condition_match(girl_straight, boy_straight, num, group_num, final_sheet)
+    row_num, existing_group, remain_girlS, remain_boyS = condition_match(girl_straight, boy_straight, num, group_num, final_sheet,n)
     row_num, existing_group, no_match = random_match(remain_girlS, remain_boyS, row_num, existing_group, final_sheet, no_match)
     row_num, existing_group, no_match = lgbt_match(boy_gay, boy_gay, row_num, existing_group, final_sheet, no_match)
     row_num, existing_group, no_match = lgbt_match(girl_gay, girl_gay, row_num, existing_group, final_sheet, no_match)
